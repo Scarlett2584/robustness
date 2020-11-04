@@ -1,7 +1,7 @@
 import dill
 import foolbox as fb
-from foolbox import zoo
 import torch
+from foolbox import zoo
 
 from robustness.datasets import CIFAR
 
@@ -12,8 +12,9 @@ robust_models = {'l2-0': 'https://www.dropbox.com/s/yhpp4yws7sgi6lj/cifar_nat.pt
                  'l-inf-0': 'https://www.dropbox.com/s/yhpp4yws7sgi6lj/cifar_nat.pt?dl=1',  # same as l2-0
                  'l-inf-8/255': 'https://www.dropbox.com/s/c9qlt1lbdnu9tlo/cifar_linf_8.pt?dl=1'}
 
-model_url = robust_models['l2-0']
-def create():
+
+def create(model_id='l2-0'):
+    model_url = robust_models[model_id]
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     weights = zoo.fetch_weights(weights_uri=model_url,
                                 unzip=False)
@@ -32,17 +33,3 @@ def create():
     fmodel = fb.models.PyTorchModel(m, bounds=(0, 1), preprocessing=preprocessing)
 
     return fmodel
-
-
-if __name__ == '__main__':
-    m = create()
-
-    import torchvision
-    tr = torchvision.transforms.ToTensor()
-    ds = torchvision.datasets.CIFAR10('~/.pytorch/CIFAR10', download=False, train=False, transform=tr)
-    from torch.utils import data
-    loader = torch.utils.data.DataLoader(ds, batch_size=100, num_workers=10)
-
-    images, labels = next(iter(loader))
-    acc = fb.accuracy(m, images, labels)
-    print(acc)
